@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Food Truck Pro — Local Health Dept States Workspace</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+:root{
+  --navy:#0D1B2A;--navy-mid:#1B3A5C;--navy-light:#2A5080;
+  --orange:#FF6B35;--orange-light:#FF8C5A;
+  --green:#1D9E75;--green-light:#E1F5EE;--green-dark:#0F6E56;
+  --blue-light:#E6F1FB;--warn-bg:#FAEEDA;--warn-txt:#854F0B;
+  --gray-100:#F7F8FA;--gray-200:#EAECF0;--gray-300:#D0D5DD;
+  --gray-500:#667085;--gray-700:#344054;--gray-900:#101828;
+  --r-sm:6px;--r-md:10px;--r-lg:16px;
+  --sh-sm:0 1px 3px rgba(0,0,0,.08);--sh-md:0 4px 16px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--gray-900);min-height:100vh}
+.hdr{background:var(--navy);position:sticky;top:0;z-index:100;box-shadow:var(--sh-md)}
+.hdr-inner{max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px}
+.logo{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;flex-shrink:0}
+.logo span{color:var(--orange)}
+.hdr-title{flex:1;font-size:12px;font-weight:500;color:rgba(255,255,255,.6)}
+.ring-wrap{position:relative;width:36px;height:36px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-wrap circle{fill:none;stroke-width:3}
+.ring-bg{stroke:rgba(255,255,255,.15)}
+.ring-prog{stroke:var(--orange);stroke-dasharray:100.5;stroke-dashoffset:100.5;stroke-linecap:round;transition:stroke-dashoffset .5s}
+.ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;font-family:'IBM Plex Mono',monospace}
+.hdr-lbl{font-size:10px;color:rgba(255,255,255,.5);font-family:'IBM Plex Mono',monospace}
+.main{max-width:960px;margin:0 auto;padding:20px 20px 60px;display:grid;grid-template-columns:1fr 290px;gap:18px;align-items:start}
+@media(max-width:760px){.main{grid-template-columns:1fr}.sidebar{order:-1}}
+.sel-hero{grid-column:1/-1;background:var(--navy);border-radius:var(--r-lg);padding:24px 28px;position:relative;overflow:hidden}
+.sel-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,53,.12) 0%,transparent 70%)}
+.sel-badge{display:inline-block;background:rgba(255,107,53,.2);border:1px solid rgba(255,107,53,.4);color:var(--orange);font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;padding:3px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+.sel-hero h1{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;margin-bottom:6px}
+.sel-hero p{font-size:12px;color:rgba(255,255,255,.55);line-height:1.6;max-width:500px;margin-bottom:18px}
+.sel-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.sel-row{grid-template-columns:1fr}}
+.sel-row select{width:100%;padding:9px 12px;border:1.5px solid rgba(255,255,255,.15);border-radius:var(--r-sm);font-size:13px;font-family:'DM Sans',sans-serif;color:#fff;background:rgba(255,255,255,.08);outline:none;cursor:pointer}
+.sel-row select option{background:var(--navy);color:#fff}
+.sel-row select:focus{border-color:var(--orange)}
+.state-card{grid-column:1/-1;background:#fff;border-radius:var(--r-lg);border:1px solid var(--gray-200);overflow:hidden;box-shadow:var(--sh-sm);display:none}
+.sc-head{background:var(--navy-mid);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
+.sc-head h2{font-size:13px;font-weight:600;color:#fff}
+.sc-badge{font-size:10px;padding:2px 9px;border-radius:20px;background:rgba(255,107,53,.25);color:var(--orange);font-family:'IBM Plex Mono',monospace;font-weight:600}
+.sc-body{display:grid;grid-template-columns:repeat(3,1fr)}
+@media(max-width:600px){.sc-body{grid-template-columns:1fr}}
+.sc-item{padding:12px 16px;border-right:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}
+.sc-item:nth-child(3n){border-right:none}
+.sc-key{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-500);font-family:'IBM Plex Mono',monospace;margin-bottom:4px}
+.sc-val{font-size:11.5px;color:var(--gray-700);line-height:1.5}
+.alert{border-radius:var(--r-md);padding:11px 15px;font-size:12px;line-height:1.6;grid-column:1/-1;border-left:3px solid;display:none}
+.alert-warn{background:var(--warn-bg);color:var(--warn-txt);border-color:#E8A045}
+.alert-info{background:var(--blue-light);color:var(--navy-mid);border-color:var(--navy-light)}
+.alert-success{background:var(--green-light);color:var(--green-dark);border-color:var(--green)}
+.phases{display:flex;flex-direction:column;gap:10px}
+.phase{background:#fff;border-radius:var(--r-lg);border:1px solid var(--gray-200);overflow:hidden;box-shadow:var(--sh-sm)}
+.phase.active{box-shadow:var(--sh-md);border-color:var(--navy-light)}
+.phase.locked{opacity:.55}
+.ph-head{padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.ph-head:hover{background:var(--gray-100)}
+.phase.locked .ph-head{cursor:not-allowed}
+.phase.locked .ph-head:hover{background:#fff}
+.ph-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'IBM Plex Mono',monospace}
+.pn-done{background:var(--green-light);color:var(--green-dark)}
+.pn-active{background:var(--blue-light);color:var(--navy-mid)}
+.pn-locked{background:var(--gray-200);color:var(--gray-500)}
+.ph-info{flex:1}
+.ph-title{font-size:13.5px;font-weight:600;color:var(--gray-900)}
+.ph-sub{font-size:10px;color:var(--gray-500);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.ph-badge{font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500;flex-shrink:0}
+.pb-done{background:var(--green-light);color:var(--green-dark)}
+.pb-active{background:var(--blue-light);color:var(--navy-mid)}
+.pb-locked{background:var(--gray-200);color:var(--gray-500)}
+.ph-body{border-top:1px solid var(--gray-200)}
+.task{padding:14px 16px;border-bottom:1px solid var(--gray-200)}
+.task:last-child{border-bottom:none}
+.task-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.t-check{width:19px;height:19px;border:2px solid var(--gray-300);border-radius:4px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.t-check.done{background:var(--green);border-color:var(--green)}
+.t-check.done::after{content:'';width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.t-info{flex:1}
+.t-title{font-size:13px;font-weight:600;color:var(--gray-900);line-height:1.4}
+.t-desc{font-size:11.5px;color:var(--gray-500);line-height:1.6;margin-top:3px}
+.t-fields{margin-top:10px;padding-left:29px;display:flex;flex-direction:column;gap:8px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg-2 .fg{display:flex;flex-direction:column;gap:3px}
+.fl{font-size:10.5px;font-weight:600;color:var(--gray-700);display:flex;align-items:center;gap:5px}
+.fl .req{color:var(--orange);font-size:9px}
+.fl .auto{color:var(--green-dark);font-size:8.5px;background:var(--green-light);padding:1px 5px;border-radius:10px;font-family:'IBM Plex Mono',monospace}
+.fi{width:100%;padding:7px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--gray-900);background:#fff;outline:none;transition:border-color .15s}
+.fi:focus{border-color:var(--navy-mid)}
+.fi.calc{background:var(--blue-light);border-color:var(--navy-light);color:var(--navy-mid);font-family:'IBM Plex Mono',monospace}
+.fn{font-size:10px;color:var(--gray-500);line-height:1.5}
+.fsel{width:100%;padding:7px 10px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--gray-900);background:#fff;outline:none;cursor:pointer}
+.fsel:focus{border-color:var(--navy-mid)}
+.fradio-row{display:flex;gap:12px;flex-wrap:wrap}
+.fradio{display:flex;align-items:center;gap:5px;font-size:11.5px;cursor:pointer}
+.fradio input{cursor:pointer;accent-color:var(--navy-mid)}
+.trig-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.trig-tbl th{background:var(--navy-mid);color:#fff;font-size:9.5px;font-weight:600;padding:6px 8px;text-align:left;text-transform:uppercase;letter-spacing:.04em}
+.trig-tbl td{border:1px solid var(--gray-200);padding:6px 8px;vertical-align:middle}
+.trig-tbl tr:nth-child(even) td{background:var(--gray-100)}
+.trig-tbl .ans{text-align:center;width:90px}
+.trig-tbl select{padding:3px 5px;border:1.5px solid var(--gray-300);border-radius:4px;font-size:10.5px;background:#fff;cursor:pointer}
+.trig-tbl select.y{border-color:#E8A045;background:var(--warn-bg)}
+.trig-tbl select.n{border-color:var(--green);background:var(--green-light)}
+.ai-btn{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:#185FA5;cursor:pointer;padding:4px 9px;border-radius:20px;border:1px solid #C5DAEE;background:var(--blue-light);margin-top:5px;transition:all .15s;font-weight:500}
+.ai-btn:hover{background:#D5E8F5}
+.done-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-size:11.5px;font-weight:600;cursor:pointer;margin-top:10px;margin-left:29px;transition:all .15s;font-family:'DM Sans',sans-serif}
+.done-btn:hover{background:var(--navy-mid)}
+.locked-msg{padding:10px 16px;font-size:11.5px;color:var(--gray-500);background:var(--gray-100);text-align:center}
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.scard{background:#fff;border-radius:var(--r-lg);border:1px solid var(--gray-200);overflow:hidden;box-shadow:var(--sh-sm)}
+.scard-head{padding:10px 14px;background:var(--navy);display:flex;align-items:center;gap:7px}
+.scard-head h3{font-size:11.5px;font-weight:600;color:#fff}
+.scard-body{padding:12px 14px}
+.chat-msgs{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:3px}
+.cmsg{padding:7px 10px;border-radius:9px;font-size:11.5px;line-height:1.55;max-width:95%}
+.cmsg-ai{background:var(--gray-100);border:1px solid var(--gray-200);color:var(--gray-900);align-self:flex-start;border-radius:9px 9px 9px 2px}
+.cmsg-user{background:var(--navy);color:#fff;align-self:flex-end;border-radius:9px 9px 2px 9px}
+.cmsg-typ{color:var(--gray-500);font-style:italic;font-size:10.5px;align-self:flex-start}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+.chip{font-size:10px;padding:3px 8px;border:1px solid var(--gray-200);border-radius:20px;cursor:pointer;color:var(--gray-700);background:var(--gray-100);transition:all .12s}
+.chip:hover{background:var(--blue-light);border-color:#C5DAEE;color:var(--navy-mid)}
+.chat-row{display:flex;gap:5px}
+.chat-inp{flex:1;padding:7px 9px;border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:11.5px;font-family:'DM Sans',sans-serif;outline:none}
+.chat-inp:focus{border-color:var(--navy-mid)}
+.chat-send{padding:7px 11px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.chat-send:hover{background:var(--navy-mid)}
+.di{display:flex;flex-direction:column;gap:2px;padding:5px 0;border-bottom:1px solid var(--gray-200)}
+.di:last-child{border-bottom:none}
+.dk{font-size:9px;color:var(--gray-500);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em}
+.dv{font-size:11.5px;color:var(--gray-900);font-weight:500}
+.dv.empty{color:var(--gray-300);font-style:italic;font-weight:400}
+.gen-btn{width:100%;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:var(--r-md);font-size:12.5px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.gen-btn:hover{background:var(--orange-light);transform:translateY(-1px)}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-ov.open{display:flex}
+.modal{background:#fff;border-radius:var(--r-lg);max-width:680px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-head{background:var(--navy);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0}
+.modal-head h2{font-size:15px;font-weight:600;color:#fff;font-family:'DM Serif Display',serif}
+.modal-x{background:rgba(255,255,255,.1);border:none;color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:20px}
+.ms{margin-bottom:20px}
+.ms h3{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--orange);font-family:'IBM Plex Mono',monospace;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--orange)}
+.st{width:100%;border-collapse:collapse;font-size:11.5px}
+.st tr{border-bottom:1px solid var(--gray-200)}
+.st td:first-child{color:var(--gray-500);padding:6px 8px 6px 0;width:44%;font-weight:500}
+.st td:last-child{color:var(--gray-900);padding:6px 0;font-family:'IBM Plex Mono',monospace;font-size:11px}
+.modal-foot{padding:14px 20px;background:var(--gray-100);border-top:1px solid var(--gray-200);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0}
+.btn-pr{padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-cl{padding:9px 18px;background:#fff;color:var(--gray-700);border:1.5px solid var(--gray-300);border-radius:var(--r-sm);font-size:12.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+@media print{.hdr,.sidebar,.modal-foot,.ph-head,.ai-btn,.done-btn{display:none!important}.modal-ov{position:static;background:none}.modal{max-height:none}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-inner">
+    <div class="logo">Food Truck<span>Pro</span></div>
+    <div class="hdr-title" id="hdr-title">Select your state to begin</div>
+    <div class="ring-wrap">
+      <svg viewBox="0 0 36 36" width="36" height="36">
+        <circle class="ring-bg" cx="18" cy="18" r="16"/>
+        <circle class="ring-prog" id="ring-prog" cx="18" cy="18" r="16"/>
+      </svg>
+      <div class="ring-pct" id="ring-pct">0%</div>
+    </div>
+    <div class="hdr-lbl" id="hdr-lbl">0/0</div>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sel-hero">
+    <div class="sel-badge">Local Health Dept States — 35 State Workspace</div>
+    <h1>Your Food Truck Approval Guide</h1>
+    <p>Your state handles food truck approvals at the local level — no statewide structural insignia program. That actually makes your path simpler. Select your state and unit type to load your county health department path, local fire marshal requirements, and everything you need to get approved and protected.</p>
+    <div class="sel-row">
+      <select id="s-state" onchange="loadState()">
+        <option value="">Select your state...</option>
+        <option value="AL">Alabama</option>
+        <option value="AK">Alaska</option>
+        <option value="AR">Arkansas</option>
+        <option value="CT">Connecticut</option>
+        <option value="DE">Delaware</option>
+        <option value="HI">Hawaii</option>
+        <option value="ID">Idaho</option>
+        <option value="IN">Indiana</option>
+        <option value="IA">Iowa</option>
+        <option value="KS">Kansas</option>
+        <option value="KY">Kentucky</option>
+        <option value="LA">Louisiana</option>
+        <option value="ME">Maine</option>
+        <option value="MD">Maryland</option>
+        <option value="MA">Massachusetts</option>
+        <option value="MN">Minnesota</option>
+        <option value="MS">Mississippi</option>
+        <option value="MT">Montana</option>
+        <option value="NE">Nebraska</option>
+        <option value="NH">New Hampshire</option>
+        <option value="NJ">New Jersey</option>
+        <option value="NM">New Mexico</option>
+        <option value="ND">North Dakota</option>
+        <option value="OH">Ohio</option>
+        <option value="OK">Oklahoma</option>
+        <option value="RI">Rhode Island</option>
+        <option value="SC">South Carolina</option>
+        <option value="SD">South Dakota</option>
+        <option value="UT">Utah</option>
+        <option value="VT">Vermont</option>
+        <option value="VA">Virginia</option>
+        <option value="WV">West Virginia</option>
+        <option value="WI">Wisconsin</option>
+        <option value="WY">Wyoming</option>
+        <option value="DC">Washington DC</option>
+      </select>
+      <select id="s-unit" onchange="loadState()">
+        <option value="">Select unit type...</option>
+        <option value="Food Truck">Food truck (motorized)</option>
+        <option value="Food Trailer">Food trailer (towed)</option>
+        <option value="Push Cart">Push cart / roadside vendor</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="state-card" id="state-card">
+    <div class="sc-head">
+      <h2 id="sc-title">State Overview</h2>
+      <span class="sc-badge" id="sc-badge"></span>
+    </div>
+    <div class="sc-body" id="sc-body"></div>
+  </div>
+
+  <div class="alert" id="main-alert"></div>
+
+  <div class="phases" id="phases-wrap">
+    <div style="background:#fff;border-radius:var(--r-lg);border:1px solid var(--gray-200);padding:40px;text-align:center;color:var(--gray-500);font-size:13px">
+      Select your state and unit type above to load your approval checklist.
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="scard">
+      <div class="scard-head">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <h3>AI Assistant</h3>
+      </div>
+      <div class="scard-body">
+        <div class="chat-msgs" id="chat-msgs">
+          <div class="cmsg cmsg-ai">Select your state above and I'll guide you through your specific approval process. Even in states with minimal regulations, there are still important steps — ask me anything.</div>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div class="chat-row">
+          <input type="text" class="chat-inp" id="chat-inp" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="chat-send" onclick="sendChat()">→</button>
+        </div>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="scard-head">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <h3>Your Application Data</h3>
+      </div>
+      <div class="scard-body">
+        <div class="di"><div class="dk">State</div><div class="dv empty" id="d-state">Not selected</div></div>
+        <div class="di"><div class="dk">Owner</div><div class="dv empty" id="d-owner">Not yet entered</div></div>
+        <div class="di"><div class="dk">Email</div><div class="dv empty" id="d-email">Not yet entered</div></div>
+        <div class="di"><div class="dk">County / city</div><div class="dv empty" id="d-county">Not yet entered</div></div>
+        <div class="di"><div class="dk">Health dept</div><div class="dv empty" id="d-healthdept">Not yet entered</div></div>
+        <div class="di"><div class="dk">Fire marshal</div><div class="dv empty" id="d-firemarshal">Not yet entered</div></div>
+        <div class="di"><div class="dk">Fresh tank</div><div class="dv empty" id="d-fresh">Not yet entered</div></div>
+        <div class="di"><div class="dk">Waste tank</div><div class="dv empty" id="d-waste">Not yet entered</div></div>
+        <div class="di"><div class="dk">Permit number</div><div class="dv empty" id="d-permit">Not yet entered</div></div>
+      </div>
+    </div>
+    <button class="gen-btn" onclick="generateSummary()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Generate Application Summary
+    </button>
+  </div>
+</div>
+
+<div class="modal-ov" id="sum-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Application Summary</h2>
+      <button class="modal-x" onclick="document.getElementById('sum-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body" id="sum-body"></div>
+    <div class="modal-foot">
+      <button class="btn-cl" onclick="document.getElementById('sum-modal').classList.remove('open')">Close</button>
+      <button class="btn-pr" onclick="window.print()">Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE DATA ────────────────────────────────────────────────────────────────
+// Each state: agency name, website, key rules, fees, special flags
+const STATE_DATA = {
+  AL:{name:'Alabama',agency:'Alabama Dept of Public Health + County Health Dept',web:'adph.org',fee:'$100–$350/yr county',rules:'Alabama Food Safety Code',flags:[],special:''},
+  AK:{name:'Alaska',agency:'Alaska Dept of Environmental Conservation (DEC)',web:'dec.alaska.gov',fee:'$100–$300/yr',rules:'18 AAC 31 (Alaska Food Code)',flags:['Remote water/waste rules may apply — verify with DEC if operating in rural areas'],special:'Remote/rural operations may require special waste disposal arrangements. DEC handles food safety statewide.'},
+  AR:{name:'Arkansas',agency:'Arkansas Dept of Health + Local County Health',web:'healthy.arkansas.gov',fee:'$75–$250/yr',rules:'Arkansas Food Code',flags:[],special:''},
+  CT:{name:'Connecticut',agency:'CT Dept of Public Health + Local Health Dept',web:'portal.ct.gov/dph',fee:'$150–$400/yr',rules:'Connecticut Food Code (2013 FDA model)',flags:['Many CT towns have very strict local zoning for food trucks — verify with your town before buying equipment'],special:'Connecticut is locally controlled — each town\'s health dept sets its own process. Some towns like Greenwich are very restrictive. Always call your specific town health dept first.'},
+  DE:{name:'Delaware',agency:'Delaware DHSS Office of Food Protection',web:'dhss.delaware.gov',fee:'$75–$200/yr',rules:'Delaware Food Code',flags:['Beach town seasonal rules — Rehoboth, Lewes, Dewey Beach all have seasonal vending restrictions'],special:'Delaware DHSS handles food safety with local coordination. Beach areas have summer seasonal restrictions. Check beach town ordinances if operating near the coast.'},
+  HI:{name:'Hawaii',agency:'Hawaii Dept of Health (DOH) — by island',web:'health.hawaii.gov',fee:'$175–$400/yr',rules:'Hawaii Administrative Rules Title 11 Chapter 50',flags:['Each island (county) has its own DOH office','Honolulu has stricter rules than neighbor islands','Outdoor cooking restrictions in some areas due to fire risk'],special:'Hawaii food truck permits are issued by county. Honolulu County (Oahu): contact Honolulu DOH. Hawaii County (Big Island): contact Hawaii DOH. Maui County: contact Maui DOH. Kauai County: contact Kauai DOH.'},
+  ID:{name:'Idaho',agency:'Idaho Dept of Health & Welfare + Local Health District',web:'healthandwelfare.idaho.gov',fee:'$75–$250/yr',rules:'Idaho Food Code (IDAPA 16.02.19)',flags:[],special:'Idaho has 7 public health districts. Contact your specific district. Boise/Ada County: Central District Health. Northern Idaho: Panhandle Health District.'},
+  IN:{name:'Indiana',agency:'Indiana State Dept of Health or Local Health Dept (depends on commissary location)',web:'in.gov/isdh',fee:'$25–$200/yr',rules:'Indiana Food Code (410 IAC 7-24)',flags:['Indianapolis (Marion County) has own process through Indianapolis Marion County Public Health'],special:'Indiana: if commissary is in a county with a local health dept, that county handles your permit. If no local dept, state ISDH issues it. Indianapolis/Marion County has its own system.'},
+  IA:{name:'Iowa',agency:'Iowa Dept of Inspections, Appeals & Licensing',web:'dial.iowa.gov',fee:'$105–$335/yr based on risk',rules:'Iowa Food Code (21 Iowa Admin Code 8)',flags:['Iowa DIAL issues mobile food unit licenses statewide','Must visit an approved commissary/home base daily'],special:'Iowa DIAL (Department of Inspections, Appeals & Licensing) issues mobile food unit licenses statewide. Risk-based fee: $105–$335. Plan review submitted to DIAL. Commissary required.'},
+  KS:{name:'Kansas',agency:'Kansas Dept of Agriculture (KDA)',web:'agriculture.ks.gov',fee:'$50–$275/yr',rules:'Kansas Food Code (K.A.R. 4-23)',flags:['KDA licenses food trucks statewide','Wichita and Kansas City KS have additional city permits'],special:'Kansas Dept of Agriculture issues statewide mobile food unit licenses. Submit application to KDA. Local city permits may also be required in Wichita and Kansas City.'},
+  KY:{name:'Kentucky',agency:'Kentucky Dept for Public Health + Local Health Dept',web:'chfs.ky.gov',fee:'$100–$350/yr',rules:'Kentucky Food Safety Code (902 KAR 45:005)',flags:['Louisville Metro: separate Louisville Metro Public Health permit required','Lexington: Fayette County Health Dept'],special:'Kentucky permits are issued at the local health department level. Louisville Metro and Lexington/Fayette have their own systems with additional requirements.'},
+  LA:{name:'Louisiana',agency:'Louisiana Dept of Health (LDH) + Local Parish Health',web:'ldh.la.gov',fee:'$100–$400/yr',rules:'Louisiana Sanitary Code (LAC 51 Part XXIII)',flags:['New Orleans: separate NOLA Health Dept permit required + city vending permit','Baton Rouge: East Baton Rouge Parish Health'],special:'Louisiana food truck permits issued by local parish health units. New Orleans has its own health dept and a separate city mobile food vendor permit. Louisiana Dept of Health sets the rules statewide.'},
+  ME:{name:'Maine',agency:'Maine Dept of Health & Human Services (DHHS)',web:'maine.gov/dhhs',fee:'$40–$200/yr',rules:'Maine Food Code (10-144 CMR Ch. 200)',flags:['Seasonal operation common — summer coastal areas very active','Some coastal towns restrict vending near lobster shacks or seafood restaurants'],special:'Maine DHHS licenses food establishments. Local municipalities may have additional vending permits. Seasonal operations common due to climate. Coastal towns may have distance restrictions.'},
+  MD:{name:'Maryland',agency:'Maryland Dept of Health + Local County Health',web:'health.maryland.gov',fee:'$100–$400/yr',rules:'Maryland Food Code (COMAR 10.15.03)',flags:['Montgomery County and Prince George\'s County (DC suburbs) have stricter rules','Baltimore City: separate Baltimore City Health Dept process'],special:'Maryland food truck permits issued by county health departments. Baltimore City has its own process. DC suburb counties (Montgomery, Prince George\'s) have detailed processes similar to Virginia Northern area.'},
+  MA:{name:'Massachusetts',agency:'Local Board of Health in each city/town',web:'mass.gov/dph',fee:'$100–$500/yr',rules:'Massachusetts Food Code (105 CMR 590)',flags:['EVERY town in MA has its own Board of Health — you need a separate permit for each town you operate in','Boston has its own Inspectional Services Dept (ISD) process','No statewide mobile food permit — all local'],special:'Massachusetts has NO statewide mobile food permit. Every city and town has its own Board of Health. You need a separate permit for each town you operate in. Boston ISD is the most complex. Call your specific town Board of Health first.'},
+  MN:{name:'Minnesota',agency:'Minnesota Dept of Agriculture (MDA) — licenses most of state',web:'mda.state.mn.us',fee:'$150–$550/yr based on risk',rules:'Minnesota Food Code (Minn. Stat. Ch. 157)',flags:['MDA plan review required before starting operations','Minneapolis and St. Paul have own licensing','Max 21 days per year at any one location'],special:'Minnesota MDA licenses mobile food units statewide (except Minneapolis/St. Paul which have own systems). Plan review required before starting operations. Units cannot operate more than 21 days per year at any single location.'},
+  MS:{name:'Mississippi',agency:'Mississippi State Dept of Health (MSDH)',web:'msdh.ms.gov',fee:'$50–$200/yr',rules:'Mississippi Food Service Establishment Rules and Regulations',flags:[],special:'Mississippi MSDH licenses food service establishments including mobile units. Local health districts enforce. Jackson, Gulfport, and Biloxi may have additional city permits.'},
+  MT:{name:'Montana',agency:'Montana Dept of Public Health & Human Services + Local Health',web:'dphhs.mt.gov',fee:'$50–$200/yr',rules:'Montana Food and Drug Act (MCA 50-31)',flags:['Many Montana counties are very rural — contact your specific county sanitarian','Glacier and Yellowstone area: seasonal rules for tourist areas'],special:'Montana food truck permits issued by local county sanitarians through DPHHS. Very rural in many areas. Contact your specific county first. Seasonal operations common in tourist corridors.'},
+  NE:{name:'Nebraska',agency:'Nebraska Dept of Agriculture (NDA) or local health dept',web:'nda.nebraska.gov',fee:'$35–$150/yr',rules:'Nebraska Food Code (172 NAC 2)',flags:['Lincoln: Lincoln-Lancaster County Health Dept','Omaha: Douglas County Health Dept'],special:'Nebraska NDA issues statewide licenses for most mobile food operations. Omaha/Douglas County and Lincoln/Lancaster County have their own local health dept processes.'},
+  NH:{name:'New Hampshire',agency:'NH Dept of Health & Human Services (DHHS) + Local Health',web:'dhhs.nh.gov',fee:'$50–$200/yr',rules:'NH Food Service Rules (He-P 2300)',flags:['NH has no statewide mobile food permit — local municipalities issue permits','Each city/town has own health officer','Seasonal operation common due to weather'],special:'New Hampshire has NO statewide mobile food permit. Local health officers in each municipality issue permits. Call your specific city or town health officer. Seasonal permits common.'},
+  NJ:{name:'New Jersey',agency:'Local Board of Health in each municipality',web:'nj.gov/health',fee:'$100–$500/yr',rules:'NJ Food and Drug Act (NJAC 8:24)',flags:['Like Massachusetts — EVERY municipality has its own Board of Health','No statewide mobile food permit','Atlantic City and Jersey Shore areas: high seasonal demand, limited spots'],special:'New Jersey has NO statewide mobile food permit. Every municipality has its own Board of Health. You need a separate permit for each municipality you operate in. Contact your specific local health department.'},
+  NM:{name:'New Mexico',agency:'NM Environment Dept (NMED) or local Environmental Health',web:'env.nm.gov',fee:'$100–$350/yr',rules:'NM Food Service and Food Processing Regulations',flags:['Albuquerque: Bernalillo County EHD has own process','Santa Fe: Santa Fe County EHD'],special:'New Mexico NMED or county environmental health departments issue food truck permits. Albuquerque/Bernalillo County and Santa Fe County have well-developed processes.'},
+  ND:{name:'North Dakota',agency:'ND Dept of Health & Human Services (DHHS)',web:'ndhealth.gov',fee:'$50–$200/yr',rules:'North Dakota Food Code (Article 33-33)',flags:['Very rural in most of the state — contact local county health unit','Fargo and Bismarck have more established food truck scenes'],special:'North Dakota DHHS issues food establishment licenses. Very rural state — contact your local county health unit. Fargo and Bismarck have more active food truck communities.'},
+  OH:{name:'Ohio',agency:'Ohio Dept of Agriculture (ODA) or Local Health Dept',web:'agri.ohio.gov',fee:'$25–$300/yr',rules:'Ohio Uniform Food Safety Code (OAC Chapter 3717)',flags:['Split system: ODA licenses if commissary in ODA-licensed facility, local health dept if in local facility','Columbus, Cleveland, Cincinnati: local health depts','Plan review required before build'],special:'Ohio has a split licensing system. If your commissary is in an ODA-licensed facility, ODA licenses you. If in a locally-licensed facility, local health dept licenses you. Plan review required before build or modification.'},
+  OK:{name:'Oklahoma',agency:'Oklahoma Dept of Agriculture, Food & Forestry (ODAFF)',web:'ag.ok.gov',fee:'$100–$300/yr',rules:'Oklahoma Food Service Establishment Rules (OAC 310:257)',flags:['ODAFF licenses most food trucks statewide','Oklahoma City: additional OKC city permit required','Tulsa: Tulsa Health Dept'],special:'Oklahoma ODAFF issues statewide food truck licenses. Oklahoma City requires an additional city-level mobile food vendor permit. Tulsa uses Tulsa Health Dept.'},
+  RI:{name:'Rhode Island',agency:'RI Dept of Health (RIDOH) + Local Health',web:'health.ri.gov',fee:'$100–$300/yr',rules:'RI Food Safety Code (R23-1 FAS)',flags:['Providence has own city process','Small state — many operators get both state and Providence city permit'],special:'Rhode Island RIDOH licenses food establishments. Providence has its own city-level process. Given RI\'s small size, many operators get both state and Providence city permits to cover their area.'},
+  SC:{name:'South Carolina',agency:'SC Dept of Health & Environmental Control (DHEC)',web:'scdhec.gov',fee:'$100–$400/yr',rules:'SC Retail Food Establishments Regulations (R.61-25)',flags:['DHEC issues statewide mobile food vendor permits','Charleston and Myrtle Beach: additional city permits for street vending'],special:'South Carolina DHEC issues statewide mobile food vendor permits. Charleston and Myrtle Beach require additional city permits for street vending. DHEC is the primary agency — contact them first.'},
+  SD:{name:'South Dakota',agency:'SD Dept of Health (DOH)',web:'doh.sd.gov',fee:'$25–$150/yr',rules:'SD Food Safety Rule (ARSD 44:02)',flags:['Very low fees and simpler process than most states','Rapid City and Sioux Falls have additional city requirements'],special:'South Dakota DOH issues food truck licenses. Low fees and relatively simple process. Rapid City and Sioux Falls may have additional city permits. Contact DOH first.'},
+  UT:{name:'Utah',agency:'Utah Dept of Agriculture & Food (UDAF) or Local Health Dept',web:'ag.utah.gov',fee:'$75–$300/yr',rules:'Utah Food Service Sanitation Rule (R392-100)',flags:['Salt Lake County: Salt Lake County Health Dept','Utah County: Utah County Health Dept','UDAF or local health dept depending on commissary location'],special:'Utah uses either UDAF or local health dept depending on where your commissary is located. Salt Lake County and Utah County have active food truck communities with well-developed processes.'},
+  VT:{name:'Vermont',agency:'Vermont Dept of Health (VDH)',web:'healthvermont.gov',fee:'$35–$175/yr',rules:'Vermont Food Safety Regulations (Chapter 5 Rule)',flags:['Seasonal operation is very common — many operators are summer-only','Burlington: contact Burlington Code Enforcement','Very rural in most areas'],special:'Vermont VDH licenses food service establishments including mobile units. Burlington is the main food truck market. Very seasonal state — summer is the active season. Simple process compared to most states.'},
+  VA:{name:'Virginia',agency:'Virginia Dept of Health (VDH) + Local Health Dept',web:'vdh.virginia.gov',fee:'$40–$300/yr',rules:'Virginia Food Regulations (12VAC5-421)',flags:['Northern Virginia (Fairfax, Arlington): stricter rules due to DC proximity','Richmond: Richmond City Health Dept','Virginia Beach: Virginia Beach Health Dept'],special:'Virginia VDH sets the rules; local health departments issue permits. Northern Virginia (DC suburbs) has higher-activity food truck scenes and more complex local rules. Richmond and Virginia Beach have active markets.'},
+  WV:{name:'West Virginia',agency:'WV Dept of Health & Human Resources (DHHR)',web:'dhhr.wv.gov',fee:'$50–$200/yr',rules:'WV Food Service Establishment Regulations (64 CSR 17)',flags:[],special:'West Virginia DHHR licenses food service establishments. Local county health departments enforce. Charleston and Huntington have the most active food truck scenes.'},
+  WI:{name:'Wisconsin',agency:'Wisconsin Dept of Agriculture, Trade & Consumer Protection (DATCP)',web:'datcp.wi.gov',fee:'$175–$600/yr based on risk',rules:'Wisconsin Food Code (ATCP 75)',flags:['DATCP licenses mobile retail food establishments statewide','Milwaukee and Madison: additional city permits required','Plan review submitted to DATCP before opening'],special:'Wisconsin DATCP issues mobile retail food establishment licenses statewide. Plan review required before opening. Milwaukee and Madison require additional city mobile food vendor permits. Risk-based fees.'},
+  WY:{name:'Wyoming',agency:'Wyoming Dept of Agriculture (WDA) + Local County Health',web:'wyagric.state.wy.us',fee:'$50–$200/yr',rules:'Wyoming Food Safety Rule (Chapter 12)',flags:['WDA licenses food trucks statewide','Laramie County (Cheyenne) and Natrona County (Casper) are largest markets','Fire compliance required — local fire marshal'],special:'Wyoming WDA issues food truck licenses statewide. Very simple process compared to most states. Contact your county health office as well. Local fire marshal still inspects propane/suppression.'},
+  DC:{name:'Washington DC',agency:'DC Health — DC Dept of Health',web:'dchealth.dc.gov',fee:'$300–$800/yr',rules:'DC Municipal Regulations Title 25 (Food and Food Operations)',flags:['High-demand vending zones have permit lotteries','Competitive permit system for popular vending locations','Mobile food vendor permit PLUS health permit required'],special:'DC Health issues food truck permits. High-demand locations (Farragut Square, L\'Enfant Plaza, etc.) use a competitive permit lottery. Both a mobile food vendor permit AND a health permit are required. DC Fire & EMS inspects for propane/generators.'}
+};
+
+// ── UNIVERSAL PHASES (same for all Tier 2 states) ───────────────────────────
+function getPhases(sd, state, unit) {
+  return [
+    {
+      title: 'Owner, Unit & Agency Information',
+      sub: `${sd.rules} · Local Health Dept`,
+      tasks: [
+        {
+          t: 'Enter owner information',
+          d: 'Goes on your county health department application. Enter once — populates your application summary.',
+          fields: [
+            {type:'2col',items:[{id:'owner',label:'Full legal name',req:true,ph:'Jane Smith'},{id:'biz',label:'Business name',ph:"Jane's Tacos"}]},
+            {type:'2col',items:[{id:'address',label:'Mailing address',req:true,ph:'Street address'},{id:'citystate',label:'City / State / ZIP',req:true,ph:`Your city, ${state} XXXXX`}]},
+            {type:'2col',items:[{id:'email',label:'Email address',req:true,ph:'you@email.com'},{id:'phone',label:'Phone number',req:true,ph:'(xxx) xxx-xxxx'}]},
+            {type:'2col',items:[{id:'vin',label:'VIN number',req:true,ph:'17-character VIN'},{id:'unittype',label:'Unit type',req:true,type:'sel',opts:['Food truck (motorized)','Food trailer (towed)','Push cart']}]}
+          ],
+          ai: `What information do I need to apply for a food truck permit in ${sd.name}?`
+        },
+        {
+          t: 'Identify your county health department and local fire marshal',
+          d: `${sd.name} food truck permits are issued at the local level. Record both agencies before you do anything else — you will need both.`,
+          fields: [
+            {type:'2col',items:[{id:'county',label:'County / city where operating',req:true,ph:'e.g. Jefferson County'},{id:'healthdept',label:'County health dept name and phone',req:true,ph:`e.g. ${sd.name} County Health`}]},
+            {type:'2col',items:[{id:'healthweb',label:'County health dept website',ph:'URL for permit applications'},{id:'firemarshal',label:'Local fire marshal / fire dept phone',ph:'For gas and suppression inspection'}]},
+            {type:'2col',items:[{id:'healthfee',label:'Health permit fee (get from county)',ph:'e.g. $200/yr'},{id:'fireinspfee',label:'Fire inspection fee',ph:'e.g. $150'}]}
+          ],
+          ai: `How do I find my county health department in ${sd.name} to start my food truck permit application?`,
+          note: sd.special || null
+        }
+      ]
+    },
+    {
+      title: 'Plan Review & Application',
+      sub: `${sd.rules} · County Health Dept`,
+      tasks: [
+        {
+          t: 'Submit plan review and application to county health department',
+          d: 'Most counties require you to submit a floor plan, equipment list, and commissary agreement before construction. Contact your county health dept to confirm their specific requirements.',
+          fields: [
+            {type:'radio',id:'planneeded',label:'Does your county require plan review before building?',opts:['YES — submitting plans before construction','NO — my county allows inspection at time of application','Not yet confirmed — need to call county']},
+            {type:'2col',items:[{id:'plandate',label:'Plan review / application submitted date',type:'date'},{id:'planapproved',label:'Plan review approved date',type:'date',note:'Do not build until plan review is approved if required'}]},
+            {type:'radio',id:'planres',label:'Plan review result:',opts:['APPROVED — build can begin','Corrections required','Not yet submitted']}
+          ],
+          ai: `Does ${sd.name} require a food truck plan review before construction? What do I submit?`
+        },
+        {
+          t: 'Secure commissary agreement',
+          d: 'Most states require a commissary — a licensed commercial kitchen where you return daily for cleaning, water refill, and grey water disposal. A private home CANNOT be used as a commissary in any state.',
+          fields: [
+            {type:'2col',items:[{id:'commissary',label:'Commissary name and address',ph:'Licensed commercial kitchen'},{id:'commphone',label:'Commissary phone',ph:'Contact number'}]},
+            {type:'radio',id:'commsigned',label:'Signed commissary agreement in hand?',opts:['YES — signed agreement ready to submit with application','NO — still looking for a commissary','N/A — my state/county does not require one (confirm with health dept)']}
+          ],
+          ai: `How do I find a commissary kitchen in ${sd.name} for my food truck?`
+        }
+      ]
+    },
+    {
+      title: 'Physical Requirements & Water System',
+      sub: `${sd.rules} · FDA Food Code`,
+      tasks: [
+        {
+          t: 'Confirm physical requirements are met',
+          d: 'Even in states with minimal structural oversight, the county health inspector checks these items at your pre-opening inspection. Have everything ready before calling to schedule.',
+          fields: [
+            {type:'trig',id:'physCheck',items:[
+              {q:'Unit is fully mobile — on wheels, can be moved at any time?'},
+              {q:'Floors, walls, and ceilings smooth, non-absorbent, and easily cleanable?'},
+              {q:'All food contact surfaces smooth, non-absorbent, NSF-listed?'},
+              {q:'Adequate refrigeration — cold foods at or below 41°F?'},
+              {q:'Hot-holding equipment maintains hot foods at or above 135°F?'},
+              {q:'Pest control — screens on all openings, no gaps where pests can enter?'}
+            ]}
+          ],
+          ai: `What physical requirements does ${sd.name} county health check during a food truck pre-opening inspection?`
+        },
+        {
+          t: 'Configure water system — 15% waste tank rule',
+          d: 'The FDA Food Code requires waste tanks to be at least 15% larger than fresh water tanks. This rule is adopted by nearly every state. Enter your fresh tank size and the minimum is calculated automatically.',
+          fields: [
+            {type:'2col',items:[{id:'freshtank',label:'Fresh water tank (gallons)',req:true,ph:'e.g. 30',calc:'waste',note:'Must be from NSF/ANSI listed materials for potable water'},{id:'wastetank',label:'Waste water tank (gallons)',req:true,ph:'Must be ≥ 15% larger'}]},
+            {type:'calc',id:'waste',label:'Minimum waste tank required',note:'15% larger than fresh — FDA Food Code adopted by all 50 states'},
+            {type:'radio',id:'threecomp',label:'3-compartment sink with drain boards installed?',opts:['YES — installed and functional','NO — need to install before inspection']},
+            {type:'radio',id:'handwash',label:'Separate handwash sink with soap and paper towels?',opts:['YES — installed and stocked','NO — need to install before inspection']}
+          ],
+          ai: `My fresh water tank is 40 gallons — what size waste tank do I need in ${sd.name}?`
+        }
+      ]
+    },
+    {
+      title: 'Food Safety Certifications',
+      sub: 'FDA Food Code · State Food Code',
+      tasks: [
+        {
+          t: 'Obtain food manager certification and food handler cards',
+          d: 'All 50 states require at least one Certified Food Protection Manager (CFPM) — either statewide law or county requirement. Most also require food handler cards for all employees.',
+          fields: [
+            {type:'2col',items:[{id:'cfmname',label:'CFPM name',req:true,ph:'Name on certificate'},{id:'cfmcert',label:'CFPM certification type',type:'sel',opts:['ServSafe','National Registry of Food Safety Professionals','Prometric','Other ANSI-accredited']}]},
+            {type:'2col',items:[{id:'cfmnum',label:'CFPM certification number',ph:'From certificate'},{id:'cfmexp',label:'CFPM expiration date',type:'date'}]},
+            {type:'radio',id:'handlers',label:'Do all employees have state food handler cards?',opts:['YES — all current','NO — need to complete before operating']}
+          ],
+          ai: `What food safety certifications are required to operate a food truck in ${sd.name}?`
+        }
+      ]
+    },
+    {
+      title: 'Fire Safety — Gas, Electrical & Suppression',
+      sub: 'NFPA 96 · NFPA 58 · Local Fire Code',
+      tasks: [
+        {
+          t: 'Why this still matters in your state',
+          d: `${sd.name} has no statewide structural insignia program — but local fire safety still applies, your insurance requires code-compliant installation, and events/festivals often require fire marshal approval regardless of state law. Building to NFPA standards protects you legally and financially.`,
+          fields: [
+            {type:'trig',id:'fireSafety',items:[
+              {q:'Commercial hood installed over ALL grease-vapor-producing equipment (fryers, griddles, ranges)?'},
+              {q:'Hood fire suppression system installed, certified, and currently tagged (within 6 months)?'},
+              {q:'Class K fire extinguisher on board (required for grease fires)?'},
+              {q:'2A-10BC fire extinguisher on board (required for electrical/general fires)?'},
+              {q:'Propane tanks properly secured — NOT on roof, rear bumper, or exposed inside unit?'},
+              {q:'Propane gas system tested for leaks before operating?'},
+              {q:'GFCI outlets within 6 feet of all water sources (NEC requirement)?'},
+              {q:'Electrical panel accessible with clear space in front?'}
+            ]}
+          ],
+          ai: `Even though ${sd.name} has no statewide structural inspection, why do I still need to meet fire safety standards?`
+        },
+        {
+          t: 'Get local fire marshal inspection (even if not strictly required)',
+          d: 'Strongly recommended even if not legally required. A fire marshal sign-off protects you if there is ever an incident, satisfies most event and festival requirements, and is required by most commercial insurance policies.',
+          fields: [
+            {type:'2col',items:[{id:'firecontact',label:'Local fire marshal contact',ph:'Fire dept that covers your operating area'},{id:'firedate',label:'Fire inspection date',type:'date'}]},
+            {type:'radio',id:'firepassed',label:'Fire marshal inspection result:',opts:['PASSED — certificate received','Passed informally — no formal certificate issued in my area','Not yet completed']}
+          ],
+          ai: `How do I get a voluntary fire marshal inspection for my food truck in ${sd.name}?`
+        }
+      ]
+    },
+    {
+      title: 'Pre-Opening Inspection & Permit',
+      sub: `${sd.rules} · County Health Dept`,
+      tasks: [
+        {
+          t: 'Schedule pre-opening health inspection and receive permit',
+          d: 'County health inspector verifies your unit meets all requirements. Have everything ready — clean unit, all equipment operational, water tanks filled, all certification documents on board.',
+          fields: [
+            {type:'2col',items:[{id:'inspdate',label:'Pre-opening inspection date',type:'date'},{id:'permitnum',label:'Health permit number',ph:'After approval'}]},
+            {type:'radio',id:'passed',label:'Inspection result:',opts:['PASSED — permit issued and posted','Corrections required — given violation list','Not yet inspected']},
+            {type:'2col',items:[{id:'permitexp',label:'Permit expiration date',type:'date',note:'Most states require annual renewal'},{id:'annualfee',label:'Annual permit fee paid',ph:'Amount paid'}]},
+            {type:'radio',id:'posted',label:'Permit posted visibly inside unit (as required in most states)?',opts:['YES — posted and visible','NO — need to post']}
+          ],
+          ai: `What will the ${sd.name} health inspector check at my food truck pre-opening inspection?`
+        }
+      ]
+    }
+  ];
+}
+
+// ── APP STATE ─────────────────────────────────────────────────────────────────
+let CUR = {state:'', unit:''};
+let DATA = {};
+let DONE = {};
+let chatHist = [];
+
+// ── LOAD STATE ────────────────────────────────────────────────────────────────
+function loadState() {
+  const s = document.getElementById('s-state').value;
+  const u = document.getElementById('s-unit').value;
+  if (!s || !u) return;
+  if (s === CUR.state && u === CUR.unit) return;
+  CUR = {state:s, unit:u};
+  DATA = {state:s, unit:u};
+  DONE = {};
+  chatHist = [];
+
+  const sd = STATE_DATA[s];
+  document.getElementById('hdr-title').textContent = `${sd.name} — ${u} Approval Workspace`;
+
+  // State info card
+  document.getElementById('state-card').style.display = 'block';
+  document.getElementById('sc-title').textContent = `${sd.name} — ${u}`;
+  document.getElementById('sc-badge').textContent = 'Local Health Dept · Local Fire Marshal';
+  document.getElementById('sc-body').innerHTML = [
+    {k:'Approving Agency',v:sd.agency},
+    {k:'Official Website',v:`<a href="https://${sd.web}" target="_blank">${sd.web}</a>`},
+    {k:'Governing Rules',v:sd.rules},
+    {k:'Typical Fee Range',v:sd.fee},
+    {k:'Process',v:'Local county health dept plan review + pre-opening inspection. Local fire marshal for gas, suppression, electrical.'},
+    {k:'Key Note',v:sd.special || 'Contact your specific county health department first — requirements vary by county.'}
+  ].map(i=>`<div class="sc-item"><div class="sc-key">${i.k}</div><div class="sc-val">${i.v}</div></div>`).join('');
+
+  // Alert
+  const al = document.getElementById('main-alert');
+  if (sd.flags && sd.flags.length > 0) {
+    al.className = 'alert alert-warn';
+    al.innerHTML = '⚠️ <strong>State-specific flags:</strong><br>' + sd.flags.map(f=>`• ${f}`).join('<br>');
+    al.style.display = 'block';
+  } else {
+    al.className = 'alert alert-success';
+    al.innerHTML = `✅ <strong>${sd.name}</strong> uses a local county health department process. No statewide structural insignia required. Your path is simpler than most states — but fire safety, water systems, and certifications still apply.`;
+    al.style.display = 'block';
+  }
+
+  // Data panel
+  document.getElementById('d-state').textContent = sd.name;
+  document.getElementById('d-state').className = 'dv';
+  document.getElementById('d-unit').className = 'dv';
+
+  renderPhases(sd, s, u);
+  updateProgress();
+
+  // Chat
+  const cm = document.getElementById('chat-msgs');
+  cm.innerHTML = `<div class="cmsg cmsg-ai">You're set up for a ${u} in ${sd.name}. Your state doesn't have a statewide structural program, so the process is simpler — but there are still important steps. I'll guide you through exactly what you need. Ask me anything.</div>`;
+  chatHist = [{role:'assistant',content:`You're set up for a ${u} in ${sd.name}.`}];
+  renderChips([`What do I do first in ${sd.name}?`,'Do I still need fire safety?','What certifications do I need?','What does the inspector check?']);
+}
+
+// ── RENDER PHASES ─────────────────────────────────────────────────────────────
+function renderPhases(sd, state, unit) {
+  const phases = getPhases(sd, state, unit);
+  const wrap = document.getElementById('phases-wrap');
+  wrap.innerHTML = '';
+
+  phases.forEach((ph, pi) => {
+    const unlocked = pi === 0 || isPhaseComplete(phases, pi - 1);
+    const complete = isPhaseComplete(phases, pi);
+    const doneCnt = ph.tasks.filter((_,ti) => DONE[`${pi}-${ti}`]).length;
+    const el = document.createElement('div');
+    el.className = 'phase' + (complete ? '' : unlocked ? ' active' : ' locked');
+    el.id = `phase-${pi}`;
+
+    let body = '';
+    if (unlocked) {
+      const tasksHtml = ph.tasks.map((task, ti) => {
+        const isDone = DONE[`${pi}-${ti}`];
+        const fieldsHtml = renderFields(task.fields || [], pi, ti);
+        const noteHtml = task.note ? `<div class="alert alert-info" style="margin:8px 0 0;grid-column:none">${task.note}</div>` : '';
+        const aiHtml = task.ai ? `<span class="ai-btn" onclick="askAI('${task.ai.replace(/'/g,"\\'")}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>${task.ai}</span>` : '';
+        return `<div class="task">
+          <div class="task-head">
+            <div class="t-check${isDone?' done':''}" id="tc-${pi}-${ti}" onclick="toggleTask(${pi},${ti})"></div>
+            <div class="t-info">
+              <div class="t-title">${task.t}</div>
+              <div class="t-desc">${task.d}</div>
+            </div>
+          </div>
+          <div class="t-fields">${fieldsHtml}${noteHtml}${aiHtml}</div>
+          <button class="done-btn" onclick="markDone(${pi},${ti})">Mark complete ✓</button>
+        </div>`;
+      }).join('');
+      body = `<div class="ph-body">${tasksHtml}</div>`;
+    } else {
+      body = `<div class="ph-body"><div class="locked-msg">🔒 Complete Phase ${pi} to unlock this phase</div></div>`;
+    }
+
+    const sc = complete ? 'pn-done' : unlocked ? 'pn-active' : 'pn-locked';
+    const bc = complete ? 'pb-done' : unlocked ? 'pb-active' : 'pb-locked';
+    el.innerHTML = `<div class="ph-head" onclick="togglePhase(${pi},${phases.length})">
+      <div class="ph-num ${sc}" id="pn-${pi}">${complete ? '✓' : pi+1}</div>
+      <div class="ph-info"><div class="ph-title">${ph.title}</div><div class="ph-sub">${ph.sub}</div></div>
+      <div class="ph-badge ${bc}" id="pb-${pi}">${complete ? 'Complete' : unlocked ? `${doneCnt}/${ph.tasks.length}` : 'Locked'}</div>
+    </div>${body}`;
+    wrap.appendChild(el);
+  });
+}
+
+// ── FIELD RENDERING ───────────────────────────────────────────────────────────
+function renderFields(fields, pi, ti) {
+  return (fields||[]).map(f => renderField(f, pi, ti)).join('');
+}
+
+function renderField(f, pi, ti) {
+  if (!f) return '';
+  const t = f.type || 'text';
+  if (t === '2col') return `<div class="fg-2">${(f.items||[]).map(it=>renderSingle(it,pi,ti)).join('')}</div>`;
+  if (t === 'calc') return `<div class="fg"><div class="fl">${f.label} <span class="auto">AUTO</span></div><input class="fi calc" id="fc-${CUR.state}-${f.id}" readonly placeholder="${f.note||''}"/>${f.note?`<div class="fn">${f.note}</div>`:''}</div>`;
+  if (t === 'radio') {
+    const opts = (f.opts||[]).map((o,i) => `<label class="fradio"><input type="radio" name="fr-${CUR.state}-${f.id}-${pi}-${ti}" value="${i}" onchange="saveF('${f.id}','${o.replace(/'/g,"\\'")}')"/> ${o}</label>`).join('');
+    return `<div class="fg"><div class="fl">${f.label}</div><div class="fradio-row">${opts}</div></div>`;
+  }
+  if (t === 'trig') {
+    const rows = (f.items||[]).map(item => `<tr><td>${item.q}</td><td class="ans"><select onchange="trigCh(this,'${f.id}')"><option value="">--</option><option>YES</option><option>NO</option></select></td></tr>`).join('');
+    return `<table class="trig-tbl"><thead><tr><th>Item to verify</th><th class="ans">Done?</th></tr></thead><tbody>${rows}</tbody></table><div id="tr-${f.id}" style="margin-top:8px;font-size:11.5px;padding:8px;border-radius:6px;background:var(--gray-100);color:var(--gray-500)">Answer all items above.</div>`;
+  }
+  return renderSingle(f, pi, ti);
+}
+
+function renderSingle(f, pi, ti) {
+  if (!f) return '';
+  if (f.type === 'sel') {
+    const opts = (f.opts||[]).map(o=>`<option>${o}</option>`).join('');
+    return `<div class="fg"><div class="fl">${f.label}${f.req?'<span class="req">*</span>':''}</div><select class="fsel" id="fi-${CUR.state}-${f.id}" onchange="saveF('${f.id}',this.value)"><option value="">Select...</option>${opts}</select>${f.note?`<div class="fn">${f.note}</div>`:''}</div>`;
+  }
+  const it = f.type === 'date' ? 'date' : 'text';
+  const oc = f.calc
+    ? `oninput="saveF('${f.id}',this.value);calcF('${f.calc}',this.value);dpUp('${f.id}',this.value)"`
+    : `oninput="saveF('${f.id}',this.value);dpUp('${f.id}',this.value)"`;
+  return `<div class="fg"><div class="fl">${f.label}${f.req?'<span class="req">*</span>':''}</div><input type="${it}" class="fi" id="fi-${CUR.state}-${f.id}" placeholder="${f.ph||''}" ${oc}/>${f.note?`<div class="fn">${f.note}</div>`:''}</div>`;
+}
+
+// ── DATA HELPERS ──────────────────────────────────────────────────────────────
+function saveF(k, v) { DATA[k] = v; }
+
+function dpUp(k, v) {
+  const map = {owner:'d-owner',email:'d-email',county:'d-county',healthdept:'d-healthdept',
+    firemarshal:'d-firemarshal',freshtank:'d-fresh',wastetank:'d-waste',permitnum:'d-permit'};
+  if (map[k]) {
+    const el = document.getElementById(map[k]);
+    if (el) { el.textContent = v||''; el.className = v ? 'dv' : 'dv empty'; }
+  }
+}
+
+function calcF(cid, val) {
+  if (cid === 'waste') {
+    const f = parseFloat(val);
+    if (f > 0) {
+      const m = Math.ceil(f * 1.15);
+      const el = document.getElementById(`fc-${CUR.state}-waste`);
+      if (el) el.value = `${m} gallons minimum (${f} × 1.15)`;
+      DATA.minWaste = m;
+    }
+  }
+}
+
+function trigCh(sel, id) {
+  sel.className = sel.value === 'YES' ? 'n' : sel.value === 'NO' ? 'y' : '';
+  const tbl = sel.closest('table');
+  if (!tbl) return;
+  const sels = tbl.querySelectorAll('select');
+  const all = Array.from(sels).every(s => s.value !== '');
+  const anyNo = Array.from(sels).some(s => s.value === 'NO');
+  const res = document.getElementById(`tr-${id}`);
+  if (res && all) {
+    if (anyNo) {
+      res.style.background = 'var(--warn-bg)'; res.style.color = 'var(--warn-txt)';
+      res.textContent = '⚠️ One or more items need attention before your inspection. Ask the AI for help.';
+    } else {
+      res.style.background = 'var(--green-light)'; res.style.color = 'var(--green-dark)';
+      res.textContent = '✅ All items confirmed — you are ready for this phase.';
+    }
+  }
+}
+
+// ── TASK / PHASE LOGIC ────────────────────────────────────────────────────────
+function getPhaseCount() {
+  if (!CUR.state) return 0;
+  return getPhases(STATE_DATA[CUR.state], CUR.state, CUR.unit).length;
+}
+
+function isPhaseComplete(phases, pi) {
+  return phases[pi].tasks.every((_, ti) => DONE[`${pi}-${ti}`]);
+}
+
+function togglePhase(pi, total) {
+  const sd = STATE_DATA[CUR.state];
+  if (!sd) return;
+  const phases = getPhases(sd, CUR.state, CUR.unit);
+  if (pi > 0 && !isPhaseComplete(phases, pi-1)) return;
+  const b = document.querySelector(`#phase-${pi} .ph-body`);
+  if (b) b.style.display = b.style.display === 'none' ? '' : 'none';
+}
+
+function markDone(pi, ti) {
+  DONE[`${pi}-${ti}`] = true;
+  const tc = document.getElementById(`tc-${pi}-${ti}`);
+  if (tc) tc.classList.add('done');
+  refreshPhase(pi);
+  updateProgress();
+}
+
+function toggleTask(pi, ti) {
+  const sd = STATE_DATA[CUR.state];
+  if (!sd) return;
+  if (pi > 0) {
+    const phases = getPhases(sd, CUR.state, CUR.unit);
+    if (!isPhaseComplete(phases, pi-1)) return;
+  }
+  DONE[`${pi}-${ti}`] = !DONE[`${pi}-${ti}`];
+  const tc = document.getElementById(`tc-${pi}-${ti}`);
+  if (tc) tc.classList.toggle('done', DONE[`${pi}-${ti}`]);
+  refreshPhase(pi);
+  updateProgress();
+}
+
+function refreshPhase(pi) {
+  const sd = STATE_DATA[CUR.state];
+  if (!sd) return;
+  const phases = getPhases(sd, CUR.state, CUR.unit);
+  const ph = phases[pi];
+  const done = ph.tasks.filter((_,ti) => DONE[`${pi}-${ti}`]).length;
+  const complete = done === ph.tasks.length;
+  const pn = document.getElementById(`pn-${pi}`);
+  const pb = document.getElementById(`pb-${pi}`);
+  if (complete) {
+    if (pn) { pn.textContent = '✓'; pn.className = 'ph-num pn-done'; }
+    if (pb) { pb.textContent = 'Complete'; pb.className = 'ph-badge pb-done'; }
+    if (phases[pi+1]) {
+      addAI(`Phase ${pi+1} complete! Unlocking "${phases[pi+1].title}".`);
+      setTimeout(() => renderPhases(sd, CUR.state, CUR.unit), 200);
+    } else {
+      addAI('All phases complete! 🎉 Generate your Application Summary to use when applying with your county health department.');
+    }
+  } else {
+    if (pn) { pn.textContent = pi+1; pn.className = 'ph-num pn-active'; }
+    if (pb) { pb.textContent = `${done}/${ph.tasks.length}`; pb.className = 'ph-badge pb-active'; }
+  }
+}
+
+function updateProgress() {
+  const sd = STATE_DATA[CUR.state];
+  if (!sd) return;
+  const phases = getPhases(sd, CUR.state, CUR.unit);
+  const total = phases.reduce((s,p) => s + p.tasks.length, 0);
+  const done = Object.values(DONE).filter(Boolean).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  const c = 2 * Math.PI * 16;
+  document.getElementById('ring-prog').style.strokeDashoffset = c - (pct/100)*c;
+  document.getElementById('ring-pct').textContent = pct + '%';
+  document.getElementById('hdr-lbl').textContent = `${done}/${total}`;
+}
+
+// ── AI CHAT ───────────────────────────────────────────────────────────────────
+function askAI(q) { document.getElementById('chat-inp').value = q; sendChat(); }
+
+function renderChips(arr) {
+  document.getElementById('chips').innerHTML = arr.map(s =>
+    `<span class="chip" onclick="askAI('${s.replace(/'/g,"\\'")}')"> ${s}</span>`).join('');
+}
+
+function addAI(t) {
+  const m = document.getElementById('chat-msgs');
+  const e = document.createElement('div');
+  e.className = 'cmsg cmsg-ai'; e.textContent = t;
+  m.appendChild(e); m.scrollTop = m.scrollHeight;
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chat-inp');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  document.getElementById('chips').innerHTML = '';
+  const msgs = document.getElementById('chat-msgs');
+  const um = document.createElement('div');
+  um.className = 'cmsg cmsg-user'; um.textContent = text;
+  msgs.appendChild(um);
+  chatHist.push({role:'user', content:text});
+  const typ = document.createElement('div');
+  typ.className = 'cmsg cmsg-typ'; typ.textContent = 'Checking official requirements...';
+  msgs.appendChild(typ); msgs.scrollTop = msgs.scrollHeight;
+
+  const sd = STATE_DATA[CUR.state] || {};
+  const sys = `You are an expert AI assistant helping a ${CUR.unit||'food truck'} owner get approved to operate in ${sd.name||'their state'}.
+
+Key facts about ${sd.name||'this state'}:
+- Approving agency: ${sd.agency||'Local county health department'}
+- Governing rules: ${sd.rules||'State food code'}
+- Official website: ${sd.web||'State health dept website'}
+- Typical fees: ${sd.fee||'Varies by county'}
+- State-specific notes: ${sd.special||'Contact your county health department for specific requirements.'}
+- Special flags: ${sd.flags?(sd.flags.join('; '))||'None':'None'}
+
+IMPORTANT CONTEXT: ${sd.name||'This state'} has NO statewide structural insignia program (unlike Washington State L&I). Food truck permits are issued at the LOCAL county health department level. The process is simpler than states like WA or CA — but fire safety, water systems, certifications, and commissary requirements still apply everywhere.
+
+Current user data: ${JSON.stringify(DATA)}
+
+Your role: Give specific, direct, actionable answers in 2-3 sentences. Always cite the agency name or code when relevant. Emphasize that even without a statewide structural program, building to NFPA 96, NFPA 58, and NEC standards protects the operator legally, keeps them insurable, and opens doors to events and other states. For commissary, menu pricing, or business operations topics say: "That's covered in Product 2 — Launch. Let's finish your permit approval first." Be warm, direct, and practical.`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens:1000, system:sys, messages:chatHist})
+    });
+    const d = await r.json();
+    const reply = d.content?.[0]?.text || 'Sorry, try again.';
+    typ.remove(); addAI(reply);
+    chatHist.push({role:'assistant', content:reply});
+    msgs.scrollTop = msgs.scrollHeight;
+    renderChips(["What's next?","Do I still need fire safety?","What does the inspector check?"]);
+  } catch(e) {
+    typ.remove(); addAI('Connection issue — please try again.');
+  }
+}
+
+// ── SUMMARY GENERATOR ─────────────────────────────────────────────────────────
+function generateSummary() {
+  const sd = STATE_DATA[CUR.state];
+  if (!sd) { alert('Select a state first.'); return; }
+  const v = k => DATA[k]
+    ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px">${DATA[k]}</span>`
+    : '<span style="color:#ccc">—</span>';
+
+  const html = `
+  <div class="ms"><h3>${sd.name} — ${CUR.unit} — Application Summary</h3>
+  <p style="font-size:11.5px;color:var(--gray-500);margin-bottom:12px">Use this to fill out your county health department application and any city/local permit forms. Print and bring to your pre-opening inspection.</p></div>
+  <div class="ms"><h3>Applicant Information</h3>
+  <table class="st">
+    <tr><td>Full legal name</td><td>${v('owner')}</td></tr>
+    <tr><td>Business name</td><td>${v('biz')}</td></tr>
+    <tr><td>Mailing address</td><td>${v('address')}</td></tr>
+    <tr><td>City / State / ZIP</td><td>${v('citystate')}</td></tr>
+    <tr><td>Phone number</td><td>${v('phone')}</td></tr>
+    <tr><td>Email address</td><td>${v('email')}</td></tr>
+  </table></div>
+  <div class="ms"><h3>Unit Information</h3>
+  <table class="st">
+    <tr><td>Unit type</td><td>${v('unittype')}</td></tr>
+    <tr><td>VIN number</td><td>${v('vin')}</td></tr>
+  </table></div>
+  <div class="ms"><h3>Agency Contacts</h3>
+  <table class="st">
+    <tr><td>State / County</td><td>${v('county')}</td></tr>
+    <tr><td>Health department</td><td>${v('healthdept')}</td></tr>
+    <tr><td>Health dept website</td><td>${v('healthweb')}</td></tr>
+    <tr><td>Fire marshal contact</td><td>${v('firemarshal')}</td></tr>
+    <tr><td>Health permit fee</td><td>${v('healthfee')}</td></tr>
+  </table></div>
+  <div class="ms"><h3>Commissary</h3>
+  <table class="st">
+    <tr><td>Commissary name/address</td><td>${v('commissary')}</td></tr>
+    <tr><td>Commissary phone</td><td>${v('commphone')}</td></tr>
+  </table></div>
+  <div class="ms"><h3>Water System</h3>
+  <table class="st">
+    <tr><td>Fresh water tank</td><td>${v('freshtank')}</td></tr>
+    <tr><td>Waste water tank</td><td>${v('wastetank')}</td></tr>
+    <tr><td>Minimum waste tank required</td><td>${DATA.minWaste ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px">${DATA.minWaste} gallons</span>` : '<span style="color:#ccc">—</span>'}</td></tr>
+  </table></div>
+  <div class="ms"><h3>Food Safety Certifications</h3>
+  <table class="st">
+    <tr><td>CFPM name</td><td>${v('cfmname')}</td></tr>
+    <tr><td>CFPM certification type</td><td>${v('cfmcert')}</td></tr>
+    <tr><td>CFPM cert number</td><td>${v('cfmnum')}</td></tr>
+    <tr><td>CFPM expiration date</td><td>${v('cfmexp')}</td></tr>
+  </table></div>
+  <div class="ms"><h3>Permit & Inspection</h3>
+  <table class="st">
+    <tr><td>Plan review submitted</td><td>${v('plandate')}</td></tr>
+    <tr><td>Plan review approved</td><td>${v('planapproved')}</td></tr>
+    <tr><td>Pre-opening inspection date</td><td>${v('inspdate')}</td></tr>
+    <tr><td>Health permit number</td><td>${v('permitnum')}</td></tr>
+    <tr><td>Permit expiration</td><td>${v('permitexp')}</td></tr>
+    <tr><td>Fire marshal inspection date</td><td>${v('firedate')}</td></tr>
+  </table></div>
+  <div style="background:var(--blue-light);border-radius:8px;padding:12px 14px;font-size:11.5px;color:var(--navy-mid);margin-top:8px">
+    <strong>Approving agency:</strong> ${sd.agency}<br/>
+    <strong>Official website:</strong> ${sd.web}<br/>
+    <strong>Governing rules:</strong> ${sd.rules}<br/>
+    <strong>How to use this summary:</strong> Print or save this. Open your county health department application. Copy each field from the matching section above. Submit with your commissary agreement, equipment list, and CFPM certificate.
+  </div>`;
+
+  document.getElementById('sum-body').innerHTML = html;
+  document.getElementById('sum-modal').classList.add('open');
+}
+
+// Init
+document.getElementById('ring-prog').style.strokeDasharray = '100.5';
+document.getElementById('ring-prog').style.strokeDashoffset = '100.5';
+</script>
+</body>
+</html>

@@ -810,7 +810,7 @@ Your role: Give specific, direct, actionable answers in 2-3 sentences. Always ci
 
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01'},
       body: JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens:1000, system:sys, messages:chatHist})
     });
     const d = await r.json();
